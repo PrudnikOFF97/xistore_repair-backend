@@ -46,6 +46,7 @@ app.get('/get_model/:code', async (req, res)=>{
         result = {name: req.params["code"]};
     }
     res.json(result);
+    res.sendStatus(200);
     await mongoose.disconnect();
 });
 app.get('/', (req, res) =>{
