@@ -70,7 +70,7 @@ app.get('/repairs/:id', urlencodedParser, async function (req, res){
         useFindAndModify: false,
         useUnifiedTopology: true
     });
-    let result = await Repairs.findOne({_id: req.params["id"]});
+    let result = await Repairs.findById(req.params["id"]);
     res.json(result);
     await mongoose.disconnect();
 
