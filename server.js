@@ -114,7 +114,7 @@ app.post("/update/:id", urlencodedParser, async function (req, res) {
         console.log(e);
         return;
     }
-    let repair = await Repairs.findOne({_id: req.params["id"]});
+    let repair = await Repairs.findById(req.params["id"]);
     console.log(Object.keys(req.body));
     if(req.body[Object.keys(req.body)]){
         repair[Object.keys(req.body)] = req.body[Object.keys(req.body)];
