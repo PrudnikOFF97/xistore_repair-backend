@@ -64,6 +64,18 @@ async function serveRepairs(req, res){
     await mongoose.disconnect();
 }
 app.get('/repairs', serveRepairs);
+app.get('/repairs/:id', urlencodedParser, async function (req, res){
+    await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
+        useNewUrlParser: true,
+        useFindAndModify: false,
+        useUnifiedTopology: true
+    });
+    let result = await Repairs.findOne({_id: req.params["id"]});
+    res.json(result);
+    await mongoose.disconnect();
+
+});
+
 app.post("/", urlencodedParser, async function (req, res) {
     if(!req.body) return response.sendStatus(400);
     var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
