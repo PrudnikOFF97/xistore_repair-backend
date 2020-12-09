@@ -65,11 +65,16 @@ async function serveRepairs(req, res){
 }
 app.get('/repairs', serveRepairs);
 app.get('/repairs/:id', urlencodedParser, async function (req, res){
-    await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
-        useNewUrlParser: true,
-        useFindAndModify: false,
-        useUnifiedTopology: true
-    });
+    try {
+        await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
+            useNewUrlParser: true,
+            useFindAndModify: false,
+            useUnifiedTopology: true
+        });
+    } catch (e) {
+        console.log(e);
+        return;
+    }    
     console.log(req.params);
     let result = await Repairs.findById(req.params["id"]);
     res.json(result);
