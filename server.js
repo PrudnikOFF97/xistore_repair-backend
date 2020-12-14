@@ -62,8 +62,6 @@ app.get('/repairs/:id', urlencodedParser, async function (req, res){
     console.log(req.params);
     let result = await Repairs.findById(req.params["id"]);
     res.json(result);
-    res.sendStatus(200);
-
 });
 
 app.post("/", urlencodedParser, async function (req, res) {
