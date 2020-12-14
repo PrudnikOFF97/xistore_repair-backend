@@ -26,7 +26,7 @@ app.use(function(req, res, next) {
 app.use(express.static("public"));
 
 try {
-    await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
+    mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
         useNewUrlParser: true,
         useFindAndModify: false,
         useUnifiedTopology: true
