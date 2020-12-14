@@ -94,6 +94,7 @@ app.post("/", urlencodedParser, async function (req, res) {
 app.post("/update/:id", urlencodedParser, async function (req, res) {
     let repair = await Repairs.findById(req.params["id"]);
     console.log(Object.keys(req.body));
+    console.log(req.body[Object.keys(req.body)]);
     if(req.body[Object.keys(req.body)]){
         repair[Object.keys(req.body)] = req.body[Object.keys(req.body)];
     }
