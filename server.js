@@ -97,7 +97,7 @@ app.post("/update/:id", urlencodedParser, async function (req, res) {
     if(req.body[Object.keys(req.body)]){
         repair[Object.keys(req.body)] = req.body[Object.keys(req.body)];
     }
-    repair.save();
+    await repair.save();
 });
 
 async function postNote(dataObj){
