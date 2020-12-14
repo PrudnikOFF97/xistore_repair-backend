@@ -25,17 +25,18 @@ app.use(function(req, res, next) {
 });
 app.use(express.static("public"));
 
+try {
+    await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
+        useNewUrlParser: true,
+        useFindAndModify: false,
+        useUnifiedTopology: true
+    });
+} catch (e) {
+    console.log(e);
+    return;
+}
+
 app.get('/get_model/:code', async (req, res)=>{
-    try {
-        await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
-            useNewUrlParser: true,
-            useFindAndModify: false,
-            useUnifiedTopology: true
-        });
-    } catch (e) {
-        console.log(e);
-        return;
-    }
     let result;
     try {
         result = await Models.findOne({code: req.params["code"]}).lean();
@@ -47,38 +48,21 @@ app.get('/get_model/:code', async (req, res)=>{
     }
     res.json(result);
     res.sendStatus(200);
-    await mongoose.disconnect();
 });
 app.get('/', (req, res) =>{
     // res.download("name.pdf");
     // res.redirect('name.pdf');
 });
 async function serveRepairs(req, res){
-    await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
-        useNewUrlParser: true,
-        useFindAndModify: false,
-        useUnifiedTopology: true
-    });
     let result = await Repairs.find({}).lean();
     res.json(result);
-    await mongoose.disconnect();
 }
 app.get('/repairs', serveRepairs);
 app.get('/repairs/:id', urlencodedParser, async function (req, res){
-    try {
-        await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
-            useNewUrlParser: true,
-            useFindAndModify: false,
-            useUnifiedTopology: true
-        });
-    } catch (e) {
-        console.log(e);
-        return;
-    }    
     console.log(req.params);
     let result = await Repairs.findById(req.params["id"]);
     res.json(result);
-    await mongoose.disconnect();
+    res.sendStatus(200);
 
 });
 
@@ -110,36 +94,16 @@ app.post("/", urlencodedParser, async function (req, res) {
 });
 
 app.post("/update/:id", urlencodedParser, async function (req, res) {
-    try {
-        await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
-            useNewUrlParser: true,
-            useFindAndModify: false,
-            useUnifiedTopology: true
-        });
-    } catch (e) {
-        console.log(e);
-        return;
-    }
     let repair = await Repairs.findById(req.params["id"]);
     console.log(Object.keys(req.body));
     if(req.body[Object.keys(req.body)]){
         repair[Object.keys(req.body)] = req.body[Object.keys(req.body)];
     }
     repair.save();
-    res.sendStatus(205);
+    res.sendStatus(200);
 });
 
 async function postNote(dataObj){
-    try {
-        await mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
-            useNewUrlParser: true,
-            useFindAndModify: false,
-            useUnifiedTopology: true
-        });
-    } catch (e) {
-        console.log(e);
-        return;
-    }
     const date = new Date();
     let todayMonth = String(Number(date.getMonth())+1);
     if(todayMonth.length < 2){
@@ -162,7 +126,6 @@ async function postNote(dataObj){
         appearance: dataObj.appearance,
     });
     await currentRepair.save();
-    await mongoose.disconnect();
 }
 const cells = {
     shopAdress: "B3",
