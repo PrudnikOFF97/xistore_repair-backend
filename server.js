@@ -47,7 +47,6 @@ app.get('/get_model/:code', async (req, res)=>{
         result = {name: req.params["code"]};
     }
     res.json(result);
-    res.sendStatus(200);
 });
 app.get('/', (req, res) =>{
     // res.download("name.pdf");
@@ -96,7 +95,7 @@ app.post("/update/:id", urlencodedParser, async function (req, res) {
     console.log(Object.keys(req.body));
     console.log(req.body[Object.keys(req.body)]);
     if(req.body[Object.keys(req.body)]){
-        repair[Object.keys(req.body)] = req.body[Object.keys(req.body)];
+        repair[Object.keys(req.body)] = req.body[Object.keys(req.body)].split("-").reverse().join('.');
     }
     await repair.save();
     res.sendStatus(204);
