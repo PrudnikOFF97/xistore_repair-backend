@@ -123,6 +123,8 @@ async function postNote(dataObj){
         malfunction: dataObj.malfunction,
         notes: dataObj.notes,
         appearance: dataObj.appearance,
+        refoundNumber: dataObj.refoundNumber,
+        replacementDevice: dataObj.replacementDevice
     });
     await currentRepair.save();
 }

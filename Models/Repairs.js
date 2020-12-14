@@ -17,6 +17,8 @@ const repairsSchema = new Schema({
     sendingDate: String,
     receivingDate: String,
     issueDate: String,
+    refoundNumber: String,
+    replacementDevice: String,
 });
 
 
