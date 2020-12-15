@@ -141,7 +141,7 @@ const cells = {
     timeFromPurchase: ["B18", "B62"],
     malfunction: ["B19", "B63"],
     from: "B54",
-    clientName: ["B50", "A41", "A86"],
+    clientName: ["B55", "A41", "A86"],
     clientPhone: "B56",
     replacementDevice: "B20",
 }
