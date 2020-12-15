@@ -129,20 +129,21 @@ async function postNote(dataObj){
 }
 const cells = {
     shopAdress: "B3",
-    number: ["B8", "B46"],
-    manager: ["C4", 'B48'],
-    dateTime: ["C5", "A46"],
-    model: ["B11", "B47"],
-    serial: ["B12", "B52"],
-    appearance: ["B13", "B53"],
-    notes: ["B14", "B55"],
-    equipment: ["B15", "B54"],
-    purchaseDate: ["B16", "B56"],
-    timeFromPurchase: ["B17", "B57"],
-    malfunction: ["B18", "B58"],
-    from: "B49",
-    clientName: "B50",
-    clientPhone: "B51",
+    number: ["B9", "B51"],
+    manager: ["C5", 'B53', 'A46', 'A91'],
+    dateTime: ["C6", "A51"],
+    model: ["B12", "B52"],
+    serial: ["B13", "B57"],
+    appearance: ["B14", "B58"],
+    notes: ["B15", "B60"],
+    equipment: ["B16", "B59"],
+    purchaseDate: ["B17", "B61"],
+    timeFromPurchase: ["B18", "B62"],
+    malfunction: ["B19", "B63"],
+    from: "B54",
+    clientName: ["B50", "A41", "A86"],
+    clientPhone: "B56",
+    replacementDevice: "B20",
 }
 async function read (name){
     const workbook = new XLSX.Workbook();
@@ -166,7 +167,7 @@ async function modify(dataObj){
     const sheet = workbook.worksheets[0];
     arrays(sheet, cells.manager, dataObj.manager);
     arrays(sheet, cells.dateTime, todayString+" "+timeString);
-    arrays(sheet, cells.number, date.getDate()+"/"+todayMonth+"/"+String(date.getFullYear()).substr(2,2))
+    arrays(sheet, cells.number, "КВИТАНЦИЯ "+date.getDate()+"/"+todayMonth+"/"+String(date.getFullYear()).substr(2,2))
     arrays(sheet, cells.model, dataObj.model);
     arrays(sheet, cells.serial, dataObj.serial);
     arrays(sheet, cells.appearance, dataObj.appearance);
@@ -178,8 +179,9 @@ async function modify(dataObj){
     arrays(sheet, cells.timeFromPurchase, Math.floor((date-purchaseDate)/1000/3600/24) > 30 ? "Свыше 30 дней" : "до 30 дней");
     arrays(sheet, cells.malfunction, dataObj.malfunction);
     sheet.getCell(cells.from).value = dataObj.from+' (Магазин "Xistore", г. Могилев Планета Green)';
-    sheet.getCell(cells.clientName).value = dataObj.clientName;
+    arrays(sheet, cells.clientName, dataObj.clientName);
     sheet.getCell(cells.clientPhone).value = dataObj.clientPhone;
+    sheet.getCell(cells.replacementDevice).value = dataObj.replacementDevice;
     await workbook.xlsx.writeFile(dataObj.clientName.split(" ")[0]+'.xlsx');
     return dataObj.clientName.split(" ")[0];
 }
