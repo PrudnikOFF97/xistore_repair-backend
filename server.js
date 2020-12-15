@@ -123,7 +123,7 @@ async function postNote(dataObj){
         notes: dataObj.notes,
         appearance: dataObj.appearance,
         refoundNumber: dataObj.refoundNumber,
-        replacementDevice: dataObj.replacementDevice
+        replacementDevice: dataObj.replacementDevice == "" ? undefined : dataObj.replacementDevice
     });
     await currentRepair.save();
 }
