@@ -57,6 +57,10 @@ async function serveRepairs(req, res){
     res.json(result);
 }
 app.get('/repairs', serveRepairs);
+app.get('/repairs/issued', async function(req, res){
+    let result = await Repairs.find({issueDate: !undefined}).lean();
+    res.json(result);
+});
 app.get('/repairs/:id', urlencodedParser, async function (req, res){
     console.log(req.params);
     let result = await Repairs.findById(req.params["id"]);
