@@ -7,11 +7,11 @@ const Repairs = require("./Models/Repairs");
 const Models = require("./Models/Models");
 const fs = require('fs');
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
+require('dotenv').config();
 
 var defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
 var Apikey = defaultClient.authentications['Apikey'];
-Apikey.apiKey = "13a8007f-a90e-4338-89ef-e935624edf50";
-
+Apikey.apiKey = process.env.CLOUDMERSIVE_KEY;
 
 const port = process.env.PORT || 1337;
 
@@ -26,7 +26,7 @@ app.use(function(req, res, next) {
 app.use(express.static("public"));
 
 try {
-    mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
+    mongoose.connect(process.env.MONGO_CONNECT, {
         useNewUrlParser: true,
         useFindAndModify: false,
         useUnifiedTopology: true
