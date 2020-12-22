@@ -115,6 +115,7 @@ app.post("/add-model", urlencodedParser, async function (req, res) {
         code: req.body.code,
     });
     await model.save();
+    res.sendStatus(204);
 });
 
 app.post("/update/:id", urlencodedParser, async function (req, res) {
