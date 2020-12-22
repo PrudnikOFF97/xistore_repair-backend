@@ -4,7 +4,7 @@ const modelsSchema = new Schema({
     name: String,
     code: { 
         type: String,
-        unique=true
+        unique: true
     },
 });
 
