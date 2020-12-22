@@ -1,7 +1,10 @@
 const {Schema, model} = require("mongoose");
 
 const modelsSchema = new Schema({
-    name: String,
+    name:{ 
+        type: String,
+        unique: false,
+    },
     code: { 
         type: String,
         unique: true
