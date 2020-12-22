@@ -70,7 +70,7 @@ app.get('/repairs/sended', async function(req, res){
     res.json(result);
 });
 app.get('/repairs/just-acepted', async function(req, res){
-    let result = await Repairs.find({"sendingDate": {$exists: true, $ne: null}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
+    let result = await Repairs.find({"sendingDate": {$exists: false}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
     res.json(result);
 });
 
