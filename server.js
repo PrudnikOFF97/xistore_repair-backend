@@ -65,6 +65,11 @@ app.get('/repairs/recived', async function(req, res){
     let result = await Repairs.find({"receivingDate": {$exists: true, $ne: null}, "issueDate": {$exists: false}}).lean();
     res.json(result);
 });
+app.get('/repairs/sended', async function(req, res){
+    let result = await Repairs.find({"sendingDate": {$exists: true, $ne: null}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
+    res.json(result);
+});
+
 app.get('/repairs/:id', urlencodedParser, async function (req, res){
     console.log(req.params);
     let result = await Repairs.findById(req.params["id"]);
