@@ -108,6 +108,15 @@ app.post("/", urlencodedParser, async function (req, res) {
     });
 });
 
+app.post("/add-model", urlencodedParser, async function (req, res) {
+    if(!req.body) return response.sendStatus(400);
+    const model = new Models({
+        name: req.body.model,
+        code: req.body.code,
+    });
+    await model.save();
+});
+
 app.post("/update/:id", urlencodedParser, async function (req, res) {
     let repair = await Repairs.findById(req.params["id"]);
     console.log(Object.keys(req.body));
