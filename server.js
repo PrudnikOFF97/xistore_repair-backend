@@ -5,6 +5,7 @@ const urlencoded = require("body-parser");
 const mongoose = require("mongoose");
 const Repairs = require("./Models/Repairs");
 const Models = require("./Models/Models");
+const repairsRouter = require("./Routes/repairs")
 const fs = require('fs');
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
@@ -35,7 +36,7 @@ try {
     console.log(e);
     return;
 }
-
+app.use("/repairs", repairsRouter);
 app.get('/get_model/:code', async (req, res)=>{
     let result;
     try {
@@ -48,39 +49,6 @@ app.get('/get_model/:code', async (req, res)=>{
     }
     res.json(result);
 });
-app.get('/', (req, res) =>{
-    // res.download("name.pdf");
-    // res.redirect('name.pdf');
-});
-async function serveRepairs(req, res){
-    let result = await Repairs.find({}).lean();
-    res.json(result);
-}
-app.get('/repairs', serveRepairs);
-app.get('/repairs/issued', async function(req, res){
-    let result = await Repairs.find({"issueDate": {$exists: true, $ne: null}}).lean();
-    res.json(result);
-});
-app.get('/repairs/recived', async function(req, res){
-    let result = await Repairs.find({"receivingDate": {$exists: true, $ne: null}, "issueDate": {$exists: false}}).lean();
-    res.json(result);
-});
-app.get('/repairs/sended', async function(req, res){
-    let result = await Repairs.find({"sendingDate": {$exists: true, $ne: null}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
-    res.json(result);
-});
-app.get('/repairs/just-acepted', async function(req, res){
-    let result = await Repairs.find({"sendingDate": {$exists: false}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
-    res.json(result);
-});
-
-
-app.get('/repairs/:id', urlencodedParser, async function (req, res){
-    console.log(req.params);
-    let result = await Repairs.findById(req.params["id"]);
-    res.json(result);
-});
-
 app.post("/", urlencodedParser, async function (req, res) {
     if(!req.body) return response.sendStatus(400);
     var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
@@ -118,16 +86,6 @@ app.post("/add-model", urlencodedParser, async function (req, res) {
     res.sendStatus(204);
 });
 
-app.post("/update/:id", urlencodedParser, async function (req, res) {
-    let repair = await Repairs.findById(req.params["id"]);
-    console.log(Object.keys(req.body));
-    console.log(req.body[Object.keys(req.body)]);
-    if(req.body[Object.keys(req.body)]){
-        repair[Object.keys(req.body)] = req.body[Object.keys(req.body)].split("-").reverse().join('.');
-    }
-    await repair.save();
-    res.sendStatus(204);
-});
 
 async function postNote(dataObj){
     const date = new Date();
