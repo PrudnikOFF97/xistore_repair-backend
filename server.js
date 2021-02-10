@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const Repairs = require("./Models/Repairs");
 const Models = require("./Models/Models");
 const repairsRouter = require("./Routes/repairs")
+const userRouter = require("./Routes/user");
 const fs = require('fs');
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
@@ -18,10 +19,11 @@ const port = process.env.PORT || 1337;
 
 const urlencodedParser = urlencoded({extended: false});
 const app = express();
+app.use(express.json());
 app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.setHeader('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
     next();
 });
 app.use(express.static("public"));
@@ -37,6 +39,7 @@ try {
     return;
 }
 app.use("/repairs", repairsRouter);
+app.use("/user", userRouter);
 app.get('/get_model/:code', async (req, res)=>{
     let result;
     try {
