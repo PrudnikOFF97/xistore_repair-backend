@@ -9,24 +9,24 @@ const urlencodedParser = urlencoded({extended: false});
 
 const router = express.Router();
 
-router.get('/', async function(req, res){
-    let result = await Repairs.find({}).lean();
+router.get('/', checkAuth, async function(req, res){
+    let result = await Repairs.find({"owner": req.userData.userId}).lean();
     res.json(result);
 });
 router.get('/issued', checkAuth, async function(req, res){
-    let result = await Repairs.find({"issueDate": {$exists: true, $ne: null}}).lean();
+    let result = await Repairs.find({"owner": req.userData.userId, "issueDate": {$exists: true, $ne: null}}).lean();
     res.json(result);
 });
 router.get('/recived', checkAuth, async function(req, res){
-    let result = await Repairs.find({"receivingDate": {$exists: true, $ne: null}, "issueDate": {$exists: false}}).lean();
+    let result = await Repairs.find({"owner": req.userData.userId, "receivingDate": {$exists: true, $ne: null}, "issueDate": {$exists: false}}).lean();
     res.json(result);
 });
 router.get('/sended', checkAuth, async function(req, res){
-    let result = await Repairs.find({"sendingDate": {$exists: true, $ne: null}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
+    let result = await Repairs.find({"owner": req.userData.userId, "sendingDate": {$exists: true, $ne: null}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
     res.json(result);
 });
 router.get('/just-acepted', checkAuth, async function(req, res){
-    let result = await Repairs.find({"sendingDate": {$exists: false}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
+    let result = await Repairs.find({"owner": req.userData.userId, "sendingDate": {$exists: false}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
     res.json(result);
 });
 router.get('/:id', checkAuth, async function (req, res){
