@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Repairs = require("./Models/Repairs");
 const Models = require("./Models/Models");
 const fs = require('fs');
+require('dotenv').config();
 
 async function read (name){
     const workbook = new XLSX.Workbook();
@@ -11,7 +12,7 @@ async function read (name){
 }
 
 try {
-    mongoose.connect("mongodb+srv://prudnikoff:1q2w3e@cluster0-3gb3f.mongodb.net/xistore?retryWrites=true&w=majority", {
+    mongoose.connect(process.env.MONGO_CONNECT, {
         useNewUrlParser: true,
         useFindAndModify: false,
         useUnifiedTopology: true,
@@ -52,29 +53,34 @@ function dateTransform(value){
     }
 }
 async function gg(){
-    let workbook = await read('rem.xlsm');
-    const sheet = workbook.worksheets[0];
-    let rowNumber = 1235;
-    // console.log(dateTransform("не доступен"));
-    while(sheet.getCell("B"+rowNumber).value !== ""){
+    // let workbook = await read('rem.xlsm');
+    // const sheet = workbook.worksheets[0];
+    // let rowNumber = 1235;
+    // // console.log(dateTransform("не доступен"));
+    // while(sheet.getCell("B"+rowNumber).value !== ""){
         
-        let currentRepair = new Repairs({
-            date: dateTransform(sheet.getCell("B"+rowNumber).value),
-            model: splitModel(sheet.getCell("C"+rowNumber).value),
-            serial: splitSerial(sheet.getCell("C"+rowNumber).value),
-            repair_type: sheet.getCell("E"+rowNumber).value,
-            clientName: sheet.getCell("D"+rowNumber).value,
-            clientPhone: sheet.getCell("F"+rowNumber).value,
-            sendingDate: dateTransform(sheet.getCell("G"+rowNumber).value),
-            receivingDate: dateTransform(sheet.getCell("H"+rowNumber).value),
-            issueDate: dateTransform(sheet.getCell("I"+rowNumber).value),        
-            refoundNumber: sheet.getCell("B"+rowNumber).note.texts[0].text,
-            replacementDevice: sheet.getCell("J"+rowNumber).value ? sheet.getCell("J"+rowNumber).value : undefined
-        });
-        console.log(currentRepair);
-        await currentRepair.save();
-        rowNumber++;
-    }
+    //     let currentRepair = new Repairs({
+    //         date: dateTransform(sheet.getCell("B"+rowNumber).value),
+    //         model: splitModel(sheet.getCell("C"+rowNumber).value),
+    //         serial: splitSerial(sheet.getCell("C"+rowNumber).value),
+    //         repair_type: sheet.getCell("E"+rowNumber).value,
+    //         clientName: sheet.getCell("D"+rowNumber).value,
+    //         clientPhone: sheet.getCell("F"+rowNumber).value,
+    //         sendingDate: dateTransform(sheet.getCell("G"+rowNumber).value),
+    //         receivingDate: dateTransform(sheet.getCell("H"+rowNumber).value),
+    //         issueDate: dateTransform(sheet.getCell("I"+rowNumber).value),        
+    //         refoundNumber: sheet.getCell("B"+rowNumber).note.texts[0].text,
+    //         replacementDevice: sheet.getCell("J"+rowNumber).value ? sheet.getCell("J"+rowNumber).value : undefined
+    //     });
+    //     console.log(currentRepair);
+    //     await currentRepair.save();
+    //     rowNumber++;
+    let result = await Repairs.find({});
+    result.forEach(repair => {
+        repair.owner = "60263a5a56e2ee1ad86ac2e2";
+        repair.save();
+    })
+    console.log("Done");
 
 }
 gg();
