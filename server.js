@@ -10,6 +10,8 @@ const userRouter = require("./Routes/user");
 const fs = require('fs');
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
+var multer = require('multer');
+const checkAuth = require('./middlewares/check-auth');
 
 var defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
 var Apikey = defaultClient.authentications['Apikey'];
@@ -18,6 +20,7 @@ Apikey.apiKey = process.env.CLOUDMERSIVE_KEY;
 const port = process.env.PORT || 1337;
 
 const urlencodedParser = urlencoded({extended: false});
+var upload = multer();
 const app = express();
 app.use(express.json());
 app.use(function(req, res, next) {
@@ -26,6 +29,7 @@ app.use(function(req, res, next) {
     res.setHeader('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
     next();
 });
+app.use(upload.array()); 
 app.use(express.static("public"));
 
 try {
@@ -52,11 +56,11 @@ app.get('/get_model/:code', async (req, res)=>{
     }
     res.json(result);
 });
-app.post("/", urlencodedParser, async function (req, res) {
+app.post("/", checkAuth, async function (req, res) {
     if(!req.body) return response.sendStatus(400);
     var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
     console.log(req.body);
-    postNote(req.body);
+    postNote(req.body, req.userData.userId);
     res.contentType("application/pdf");
     let name = modify(req.body)
     .then(name => {
@@ -90,7 +94,7 @@ app.post("/add-model", urlencodedParser, async function (req, res) {
 });
 
 
-async function postNote(dataObj){
+async function postNote(dataObj, userId){
     const date = new Date();
     let todayMonth = String(Number(date.getMonth())+1);
     if(todayMonth.length < 2){
@@ -112,7 +116,8 @@ async function postNote(dataObj){
         notes: dataObj.notes,
         appearance: dataObj.appearance,
         refoundNumber: dataObj.refoundNumber,
-        replacementDevice: dataObj.replacementDevice == "" ? undefined : dataObj.replacementDevice
+        replacementDevice: dataObj.replacementDevice == "" ? undefined : dataObj.replacementDevice,
+        owner: userId
     });
     await currentRepair.save();
 }
