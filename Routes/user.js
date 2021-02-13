@@ -3,6 +3,7 @@ const User = require('../Models/Users')
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const bodyParser = require('body-parser');
+const checkAuth = require('../middlewares/check-auth');
 const jsonParser = bodyParser.json();
 const urlencodedParser = bodyParser.urlencoded({ extended: false })
 
@@ -79,6 +80,12 @@ router.post("/signup", (req, res, next) => {
      
       console.log(e)
     
+    })
+  });
+  router.get("/managers", checkAuth, (req, res) => {
+    User.findById(req.userData.userId)
+    .then(user => {
+      res.json(user.managers);
     })
   })
 module.exports = router
