@@ -12,6 +12,7 @@ const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
 var multer = require('multer');
 const checkAuth = require('./middlewares/check-auth');
+const Users = require('./Models/Users');
 
 var defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
 var Apikey = defaultClient.authentications['Apikey'];
@@ -62,7 +63,7 @@ app.post("/", checkAuth, async function (req, res) {
     console.log(req.body);
     postNote(req.body, req.userData.userId);
     res.contentType("application/pdf");
-    let name = modify(req.body)
+    let name = modify(req.body, req.userData.userId)
     .then(name => {
         var callback = async function(error, data, response) {
             if (error) {
@@ -144,7 +145,7 @@ async function read (name){
     await workbook.xlsx.readFile(name);
     return workbook;
 }
-async function modify(dataObj){
+async function modify(dataObj, uid){
     console.log("start");
     const date = new Date();
     let todayMonth = String(Number(date.getMonth())+1);
@@ -157,6 +158,7 @@ async function modify(dataObj){
         minutesString = "0"+minutesString;
     }
     const timeString = date.getHours()+":"+minutesString;
+    const user = await Users.findById(uid).lean();
     let workbook = await read('act.xlsx');
     const sheet = workbook.worksheets[0];
     arrays(sheet, cells.manager, dataObj.manager);
@@ -172,7 +174,8 @@ async function modify(dataObj){
     arrays(sheet, cells.purchaseDate, inputedPurchaseDate);
     arrays(sheet, cells.timeFromPurchase, Math.floor((date-purchaseDate)/1000/3600/24) > 30 ? "Свыше 30 дней" : "до 30 дней");
     arrays(sheet, cells.malfunction, dataObj.malfunction);
-    sheet.getCell(cells.from).value = dataObj.from+' (Магазин "Xistore", г. Могилев Планета Green)';
+    sheet.getCell(cells.shopAdress).value = 'Товар принял магазин "Xistore". ' + (!!user.addres ? user.addres : '');
+    sheet.getCell(cells.from).value = dataObj.from + (!!user.addres ? ' ('+user.addres+')' : '');
     arrays(sheet, cells.clientName, dataObj.clientName);
     sheet.getCell(cells.clientPhone).value = dataObj.clientPhone;
     sheet.getCell(cells.replacementDevice).value = dataObj.replacementDevice;
