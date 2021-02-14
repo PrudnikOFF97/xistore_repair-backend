@@ -71,7 +71,7 @@ router.post("/login", (req, res, next) => {
         login: fetchedUser.login,
         userId: fetchedUser._id
       },
-      "secret_this_should_be_longer", {
+      JWT_SECRET, {
         expiresIn: "1h"
       }
     );
