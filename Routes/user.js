@@ -86,7 +86,7 @@ router.post("/login", (req, res, next) => {
 router.post("/", checkAuth, (req, res) => {
   User.findById(req.userData.userId)
     .then(user => {
-      user.managers = req.body.managers.filter((elem) => elem);
+      user.managers = Array.isArray(req.body.managers) ? req.body.managers.filter((elem) => elem) : !!req.body.managers ? req.body.managers : undefined;
       user.addres = req.body.addres;
       user.save();
     })
