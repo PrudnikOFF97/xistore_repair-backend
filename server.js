@@ -11,7 +11,7 @@ const fs = require('fs');
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
 var multer = require('multer');
-const checkAuth = require('./middlewares/check-auth');
+const checkAuth = require('./Middlewares/check-auth');
 const Users = require('./Models/Users');
 
 var defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;

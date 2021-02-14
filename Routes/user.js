@@ -3,7 +3,7 @@ const User = require('../Models/Users')
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const bodyParser = require('body-parser');
-const checkAuth = require('../middlewares/check-auth');
+const checkAuth = require('../Middlewares/check-auth');
 const jsonParser = bodyParser.json();
 const urlencodedParser = bodyParser.urlencoded({
   extended: false

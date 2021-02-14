@@ -1,7 +1,7 @@
 const express = require('express')
 const Repairs = require('../Models/Repairs')
 const urlencoded = require("body-parser");
-const checkAuth = require("../middlewares/check-auth");
+const checkAuth = require("../Middlewares/check-auth");
 
 
 const urlencodedParser = urlencoded({extended: false});
