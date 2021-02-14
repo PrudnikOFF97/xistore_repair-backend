@@ -5,9 +5,14 @@ const urlencoded = require("body-parser");
 const mongoose = require("mongoose");
 const Repairs = require("./Models/Repairs");
 const Models = require("./Models/Models");
+const repairsRouter = require("./Routes/repairs")
+const userRouter = require("./Routes/user");
 const fs = require('fs');
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
+var multer = require('multer');
+const checkAuth = require('./middlewares/check-auth');
+const Users = require('./Models/Users');
 
 var defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
 var Apikey = defaultClient.authentications['Apikey'];
@@ -16,13 +21,16 @@ Apikey.apiKey = process.env.CLOUDMERSIVE_KEY;
 const port = process.env.PORT || 1337;
 
 const urlencodedParser = urlencoded({extended: false});
+var upload = multer();
 const app = express();
+app.use(express.json());
 app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.setHeader('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
     next();
 });
+app.use(upload.array()); 
 app.use(express.static("public"));
 
 try {
@@ -35,7 +43,8 @@ try {
     console.log(e);
     return;
 }
-
+app.use("/repairs", repairsRouter);
+app.use("/user", userRouter);
 app.get('/get_model/:code', async (req, res)=>{
     let result;
     try {
@@ -48,46 +57,13 @@ app.get('/get_model/:code', async (req, res)=>{
     }
     res.json(result);
 });
-app.get('/', (req, res) =>{
-    // res.download("name.pdf");
-    // res.redirect('name.pdf');
-});
-async function serveRepairs(req, res){
-    let result = await Repairs.find({}).lean();
-    res.json(result);
-}
-app.get('/repairs', serveRepairs);
-app.get('/repairs/issued', async function(req, res){
-    let result = await Repairs.find({"issueDate": {$exists: true, $ne: null}}).lean();
-    res.json(result);
-});
-app.get('/repairs/recived', async function(req, res){
-    let result = await Repairs.find({"receivingDate": {$exists: true, $ne: null}, "issueDate": {$exists: false}}).lean();
-    res.json(result);
-});
-app.get('/repairs/sended', async function(req, res){
-    let result = await Repairs.find({"sendingDate": {$exists: true, $ne: null}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
-    res.json(result);
-});
-app.get('/repairs/just-acepted', async function(req, res){
-    let result = await Repairs.find({"sendingDate": {$exists: false}, "receivingDate": {$exists: false}, "issueDate": {$exists: false}}).lean();
-    res.json(result);
-});
-
-
-app.get('/repairs/:id', urlencodedParser, async function (req, res){
-    console.log(req.params);
-    let result = await Repairs.findById(req.params["id"]);
-    res.json(result);
-});
-
-app.post("/", urlencodedParser, async function (req, res) {
+app.post("/", checkAuth, async function (req, res) {
     if(!req.body) return response.sendStatus(400);
     var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
     console.log(req.body);
-    postNote(req.body);
+    postNote(req.body, req.userData.userId);
     res.contentType("application/pdf");
-    let name = modify(req.body)
+    let name = modify(req.body, req.userData.userId)
     .then(name => {
         var callback = async function(error, data, response) {
             if (error) {
@@ -118,18 +94,8 @@ app.post("/add-model", urlencodedParser, async function (req, res) {
     res.sendStatus(204);
 });
 
-app.post("/update/:id", urlencodedParser, async function (req, res) {
-    let repair = await Repairs.findById(req.params["id"]);
-    console.log(Object.keys(req.body));
-    console.log(req.body[Object.keys(req.body)]);
-    if(req.body[Object.keys(req.body)]){
-        repair[Object.keys(req.body)] = req.body[Object.keys(req.body)].split("-").reverse().join('.');
-    }
-    await repair.save();
-    res.sendStatus(204);
-});
 
-async function postNote(dataObj){
+async function postNote(dataObj, userId){
     const date = new Date();
     let todayMonth = String(Number(date.getMonth())+1);
     if(todayMonth.length < 2){
@@ -151,7 +117,8 @@ async function postNote(dataObj){
         notes: dataObj.notes,
         appearance: dataObj.appearance,
         refoundNumber: dataObj.refoundNumber,
-        replacementDevice: dataObj.replacementDevice == "" ? undefined : dataObj.replacementDevice
+        replacementDevice: dataObj.replacementDevice == "" ? undefined : dataObj.replacementDevice,
+        owner: userId
     });
     await currentRepair.save();
 }
@@ -178,7 +145,7 @@ async function read (name){
     await workbook.xlsx.readFile(name);
     return workbook;
 }
-async function modify(dataObj){
+async function modify(dataObj, uid){
     console.log("start");
     const date = new Date();
     let todayMonth = String(Number(date.getMonth())+1);
@@ -191,6 +158,7 @@ async function modify(dataObj){
         minutesString = "0"+minutesString;
     }
     const timeString = date.getHours()+":"+minutesString;
+    const user = await Users.findById(uid).lean();
     let workbook = await read('act.xlsx');
     const sheet = workbook.worksheets[0];
     arrays(sheet, cells.manager, dataObj.manager);
@@ -206,7 +174,8 @@ async function modify(dataObj){
     arrays(sheet, cells.purchaseDate, inputedPurchaseDate);
     arrays(sheet, cells.timeFromPurchase, Math.floor((date-purchaseDate)/1000/3600/24) > 30 ? "Свыше 30 дней" : "до 30 дней");
     arrays(sheet, cells.malfunction, dataObj.malfunction);
-    sheet.getCell(cells.from).value = dataObj.from+' (Магазин "Xistore", г. Могилев Планета Green)';
+    sheet.getCell(cells.shopAdress).value = 'Товар принял магазин "Xistore". ' + (!!user.addres ? user.addres : '');
+    sheet.getCell(cells.from).value = dataObj.from + (!!user.addres ? ' ('+user.addres+')' : '');
     arrays(sheet, cells.clientName, dataObj.clientName);
     sheet.getCell(cells.clientPhone).value = dataObj.clientPhone;
     sheet.getCell(cells.replacementDevice).value = dataObj.replacementDevice;
