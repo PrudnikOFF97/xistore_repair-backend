@@ -13,14 +13,13 @@ const urlencodedParser = bodyParser.urlencoded({
 const router = express.Router();
 
 router.post("/signup", (req, res, next) => {
-  console.log(req.body);
   bcrypt.hash(req.body.password, 10).then(hash => {
     const user = new User({
-      login: req.body.login,
+      login: req.body.login.toUpperCase(),
       password: hash
     });
     User.findOne({
-        login: req.body.login
+        login: req.body.login.toUpperCase()
       }).then(user1 => {
         if (user1) {
           return res.status(401).json({
@@ -52,39 +51,37 @@ router.post("/signup", (req, res, next) => {
 
 router.post("/login", (req, res, next) => {
   let fetchedUser;
-  console.log(req.body);
   User.findOne({
-      login: req.body.login
-    }).then(user => {
-      if (!user) {
-        return res.status(401).json({
-          message: "Ошибка: такого пользователя не существует!"
-        })
+    login: req.body.login.toUpperCase()
+  }).then(user => {
+    if (!user) {
+      return res.status(401).json({
+        message: "Ошибка: такого пользователя не существует!"
+      })
+    }
+    fetchedUser = user;
+    return bcrypt.compare(req.body.password, user.password);
+  }).then(result => {
+    if (!result) {
+      return res.status(401).json({
+        message: "Ошибка: неверный пароль!"
+      })
+    }
+    const token = jwt.sign({
+        login: fetchedUser.login,
+        userId: fetchedUser._id
+      },
+      "secret_this_should_be_longer", {
+        expiresIn: "1h"
       }
-      fetchedUser = user;
-      return bcrypt.compare(req.body.password, user.password);
-    }).then(result => {
-      console.log(fetchedUser)
-      if (!result) {
-        return res.status(401).json({
-          message: "Ошибка: неверный пароль!"
-        })
-      }
-      const token = jwt.sign({
-          login: fetchedUser.login,
-          userId: fetchedUser._id
-        },
-        "secret_this_should_be_longer", {
-          expiresIn: "1h"
-        }
-      );
-      res.status(200).json({
-        token: token,
-        expiresIn: 3600,
-        userId: fetchedUser._id,
-        userName: fetchedUser.login
-      });
-    })
+    );
+    res.status(200).json({
+      token: token,
+      expiresIn: 3600,
+      userId: fetchedUser._id,
+      userName: fetchedUser.login
+    });
+  })
 });
 router.post("/", checkAuth, (req, res) => {
   User.findById(req.userData.userId)
@@ -93,19 +90,25 @@ router.post("/", checkAuth, (req, res) => {
       user.addres = req.body.addres;
       user.save();
     })
-    .then(res.status(200).json({
-      message: "Данные успешно обновлены"
-    }))
+    .then(
+      res.status(200).json({
+        message: "Данные успешно обновлены"
+      })
+    )
     .catch(err => {
       res.status(500).json({
-      message: "Ошибка!"
+        message: "Ошибка!"
       })
     });
 });
 router.get("/", checkAuth, (req, res) => {
   User.findById(req.userData.userId)
     .then(user => {
-      res.json(user);
+      res.json({
+        login: user.login,
+        managers: user.managers,
+        addres: user.addres
+      });
     });
 });
 router.get("/managers", checkAuth, (req, res) => {
