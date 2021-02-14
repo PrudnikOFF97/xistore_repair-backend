@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const bodyParser = require('body-parser');
 const checkAuth = require('../Middlewares/check-auth');
+require('dotenv').config();
 const jsonParser = bodyParser.json();
 const urlencodedParser = bodyParser.urlencoded({
   extended: false
@@ -71,7 +72,7 @@ router.post("/login", (req, res, next) => {
         login: fetchedUser.login,
         userId: fetchedUser._id
       },
-      JWT_SECRET, {
+      process.env.JWT_SECRET, {
         expiresIn: "1h"
       }
     );
