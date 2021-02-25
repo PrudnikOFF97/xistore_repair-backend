@@ -111,8 +111,15 @@ app.post("/add-model", checkAuth, async function (req, res) {
         name: req.body.name,
         code: req.body.code,
     });
-    await model.save();
-    res.sendStatus(204);
+    await model.save()
+    .then(() =>{
+        res.sendStatus(201);
+    })
+    .catch(() => {
+        res.status(500).json({
+            message: "Ошибка!"
+        })
+    })
 });
 
 
