@@ -19,7 +19,8 @@ const repairsSchema = new Schema({
     issueDate: String,
     refoundNumber: String,
     replacementDevice: String,
-    owner: String
+    owner: String,
+    comment: String
 });
 
 
