@@ -11,7 +11,7 @@ const fs = require('fs');
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
 var multer = require('multer');
-const checkAuth = require('./middlewares/check-auth');
+const checkAuth = require('./Middlewares/check-auth');
 const Users = require('./Models/Users');
 
 var defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
@@ -60,7 +60,6 @@ app.get('/get_model/:code', async (req, res)=>{
 app.post("/", checkAuth, async function (req, res) {
     if(!req.body) return response.sendStatus(400);
     var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
-    console.log(req.body);
     postNote(req.body, req.userData.userId);
     res.contentType("application/pdf");
     let name = modify(req.body, req.userData.userId)
@@ -83,25 +82,52 @@ app.post("/", checkAuth, async function (req, res) {
         return name;
     });
 });
-
-app.post("/add-model", urlencodedParser, async function (req, res) {
+app.get("/print/:id", checkAuth, async (req, res) => {
+    res.contentType("application/pdf");
+    var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
+    const repair = await Repairs.findById(req.params["id"]).lean()
+    modify(repair, req.userData.userId)
+    .then(name => {
+        var callback = async function(error, data, response) {
+            if (error) {
+                console.error(error);
+            } else {
+                fs.writeFileSync(name+".pdf", data, () => {});
+                const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
+                const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
+                pdfDoc.addPage(existingPage);
+                const pdfBytes = await pdfDoc.save();
+                fs.writeFileSync(name+".pdf", pdfBytes, () => {});
+                res.send(fs.readFileSync(name+".pdf", () => {}));
+            }
+        };    
+        let inputFile = Buffer.from(fs.readFileSync(name+".xlsx").buffer);
+        apiInstance.convertDocumentXlsxToPdf(inputFile, callback);
+    });
+});
+app.post("/add-model", checkAuth, async function (req, res) {
     if(!req.body) return response.sendStatus(400);
     const model = new Models({
         name: req.body.name,
         code: req.body.code,
     });
-    await model.save();
-    res.sendStatus(204);
+    await model.save()
+    .then(() =>{
+        res.sendStatus(201);
+    })
+    .catch(() => {
+        res.status(500).json({
+            message: "Ошибка!"
+        })
+    })
 });
 
 
 async function postNote(dataObj, userId){
     const date = new Date();
     let todayMonth = String(Number(date.getMonth())+1);
-    if(todayMonth.length < 2){
-        todayMonth = "0"+todayMonth;
-    }
-    const todayString = date.getDate() +"."+todayMonth+"."+date.getFullYear();
+    todayMonth = todayMonth < 10 ? ("0"+todayMonth) : todayMonth;
+    const todayString = (date.getDate() < 10 ? ("0"+ date.getDate()) : date.getDate()) +"."+todayMonth+"."+date.getFullYear();
     const currentRepair = new Repairs({
         date: todayString,
         manager: dataObj.manager,
@@ -146,24 +172,19 @@ async function read (name){
     return workbook;
 }
 async function modify(dataObj, uid){
-    console.log("start");
-    const date = new Date();
+    const date = dataObj.date ? new Date(dataObj.date.split(".").reverse().join("-")) : new Date();
     let todayMonth = String(Number(date.getMonth())+1);
-    if(todayMonth.length < 2){
-        todayMonth = "0"+todayMonth;
-    }
-    const todayString = date.getDate()+"."+todayMonth+"."+date.getFullYear();
-    let minutesString = String(date.getMinutes());
-    if(minutesString.length < 2){
-        minutesString = "0"+minutesString;
-    }
-    const timeString = date.getHours()+":"+minutesString;
+    todayMonth = todayMonth < 10 ? ("0"+todayMonth) : todayMonth;
+    const todayString = (date.getDate() < 10 ? ("0"+ date.getDate()) : date.getDate()) +"."+todayMonth+"."+date.getFullYear();
+    let minutesString = String(new Date().getMinutes());
+    minutesString = minutesString < 10 ? ("0"+minutesString) : minutesString;
+    const timeString = new Date().getHours()+":"+minutesString;
     const user = await Users.findById(uid).lean();
     let workbook = await read('act.xlsx');
     const sheet = workbook.worksheets[0];
     arrays(sheet, cells.manager, dataObj.manager);
     arrays(sheet, cells.dateTime, todayString+" "+timeString);
-    arrays(sheet, cells.number, "КВИТАНЦИЯ "+date.getDate()+"/"+todayMonth+"/"+String(date.getFullYear()).substr(2,2))
+    arrays(sheet, cells.number, "КВИТАНЦИЯ "+(date.getDate() < 10 ? ("0"+ date.getDate()) : date.getDate())+"/"+todayMonth+"/"+String(date.getFullYear()).substr(2,2))
     arrays(sheet, cells.model, dataObj.model);
     arrays(sheet, cells.serial, dataObj.serial);
     arrays(sheet, cells.appearance, dataObj.appearance);
