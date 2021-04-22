@@ -1,4 +1,5 @@
 const { PDFDocument } = require('pdf-lib');
+const libre = require('libreoffice-convert');
 XLSX = require('exceljs');
 const express = require('express');
 const urlencoded = require("body-parser");
@@ -8,6 +9,7 @@ const Models = require("./Models/Models");
 const repairsRouter = require("./Routes/repairs")
 const userRouter = require("./Routes/user");
 const fs = require('fs');
+const path = require('path');
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
 var multer = require('multer');
@@ -64,21 +66,40 @@ app.post("/", checkAuth, async function (req, res) {
     res.contentType("application/pdf");
     let name = modify(req.body, req.userData.userId)
     .then(name => {
-        var callback = async function(error, data, response) {
-            if (error) {
-                console.error(error);
-            } else {
-                fs.writeFileSync(name+".pdf", data, () => {});
-                const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
-                const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
-                pdfDoc.addPage(existingPage);
-                const pdfBytes = await pdfDoc.save();
-                fs.writeFileSync(name+".pdf", pdfBytes, () => {});
-                res.send(fs.readFileSync(name+".pdf", () => {}));
+        // var callback = async function(error, data, response) {
+        //     if (error) {
+        //         console.error(error);
+        //     } else {
+        //         fs.writeFileSync(name+".pdf", data, () => {});
+        //         const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
+        //         const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
+        //         pdfDoc.addPage(existingPage);
+        //         const pdfBytes = await pdfDoc.save();
+        //         fs.writeFileSync(name+".pdf", pdfBytes, () => {});
+        //         res.send(fs.readFileSync(name+".pdf", () => {}));
+        //     }
+        // };    
+        // let inputFile = Buffer.from(fs.readFileSync(name+".xlsx").buffer);
+        let inputFile = path.join(__dirname, `${name}.xlsx`);
+        const file = fs.readFileSync(inputFile);
+        libre.convert(file, ".pdf", undefined, (err, done) => {
+            if (err) {
+              console.log(`Error converting file: ${err}`);
             }
-        };    
-        let inputFile = Buffer.from(fs.readFileSync(name+".xlsx").buffer);
-        apiInstance.convertDocumentXlsxToPdf(inputFile, callback);
+            
+            // Here in done you have pdf file which you can save or transfer in another stream
+            fs.writeFileSync(path.join(__dirname, `${name}.pdf`), done);
+        })
+        .then(() => {
+            const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
+            const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
+            pdfDoc.addPage(existingPage);
+            const pdfBytes = await pdfDoc.save();
+            fs.writeFileSync(name+".pdf", pdfBytes, () => {});
+            res.send(fs.readFileSync(name+".pdf", () => {}));
+
+        })
+        // apiInstance.convertDocumentXlsxToPdf(inputFile, callback);
         return name;
     });
 });
