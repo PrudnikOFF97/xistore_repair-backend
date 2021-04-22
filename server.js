@@ -88,18 +88,16 @@ app.get("/print/:id", checkAuth, async (req, res) => {
         let inputFile = path.join(__dirname, `${name}.xlsx`);
         const file = fs.readFileSync(inputFile);
         toPdf(file)
-        .then((pdfBuffer) => {
-            fs.writeFileSync(`./${name}.pdf`, pdfBuffer)
-        }, (err) => {
-            console.log(err)
-        })
-        .then(async () => {
-            const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
+        .then(async (pdfBuffer) => {
+            const pdfDoc = await PDFDocument.load(pdfBuffer);
             const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
             pdfDoc.addPage(existingPage);
             const pdfBytes = await pdfDoc.save();
-            fs.writeFileSync(name+".pdf", pdfBytes, () => {});
-            res.send(fs.readFileSync(name+".pdf", () => {}));
+            // fs.writeFileSync(`./${name}.pdf`, pdfBytes);
+            // res.send(fs.readFileSync(name+".pdf", () => {}));
+            res.send(pdfBytes);
+        }, (err) => {
+            console.log(err)
         });
     });
 });
