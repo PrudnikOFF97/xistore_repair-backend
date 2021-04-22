@@ -10,15 +10,10 @@ const userRouter = require("./Routes/user");
 const fs = require('fs');
 const path = require('path');
 var toPdf = require("office-to-pdf");
-const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
 var multer = require('multer');
 const checkAuth = require('./Middlewares/check-auth');
 const Users = require('./Models/Users');
-
-var defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
-var Apikey = defaultClient.authentications['Apikey'];
-Apikey.apiKey = process.env.CLOUDMERSIVE_KEY;
 
 const port = process.env.PORT || 1337;
 
@@ -66,30 +61,15 @@ app.post("/", checkAuth, async function (req, res) {
     res.contentType("application/pdf");
     let name = modify(req.body, req.userData.userId)
     .then(name => {
-        // var callback = async function(error, data, response) {
-        //     if (error) {
-        //         console.error(error);
-        //     } else {
-        //         fs.writeFileSync(name+".pdf", data, () => {});
-        //         const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
-        //         const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
-        //         pdfDoc.addPage(existingPage);
-        //         const pdfBytes = await pdfDoc.save();
-        //         fs.writeFileSync(name+".pdf", pdfBytes, () => {});
-        //         res.send(fs.readFileSync(name+".pdf", () => {}));
-        //     }
-        // };    
-        // let inputFile = Buffer.from(fs.readFileSync(name+".xlsx").buffer);
         let inputFile = path.join(__dirname, `${name}.xlsx`);
         const file = fs.readFileSync(inputFile);
-        toPdf(file).then(
-            (pdfBuffer) => {
-                fs.writeFileSync(`./${name}.pdf`, pdfBuffer)
-            }, (err) => {
-              console.log(err)
-            }
-          )
-          .then(async () => {
+        toPdf(file)
+        .then((pdfBuffer) => {
+            fs.writeFileSync(`./${name}.pdf`, pdfBuffer)
+        }, (err) => {
+            console.log(err)
+        })
+        .then(async () => {
             const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
             const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
             pdfDoc.addPage(existingPage);
@@ -98,7 +78,6 @@ app.post("/", checkAuth, async function (req, res) {
             res.send(fs.readFileSync(name+".pdf", () => {}));
 
         })
-        // apiInstance.convertDocumentXlsxToPdf(inputFile, callback);
         return name;
     });
 });
@@ -108,21 +87,23 @@ app.get("/print/:id", checkAuth, async (req, res) => {
     const repair = await Repairs.findById(req.params["id"]).lean()
     modify(repair, req.userData.userId)
     .then(name => {
-        var callback = async function(error, data, response) {
-            if (error) {
-                console.error(error);
-            } else {
-                fs.writeFileSync(name+".pdf", data, () => {});
-                const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
-                const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
-                pdfDoc.addPage(existingPage);
-                const pdfBytes = await pdfDoc.save();
-                fs.writeFileSync(name+".pdf", pdfBytes, () => {});
-                res.send(fs.readFileSync(name+".pdf", () => {}));
-            }
-        };    
-        let inputFile = Buffer.from(fs.readFileSync(name+".xlsx").buffer);
-        apiInstance.convertDocumentXlsxToPdf(inputFile, callback);
+        let inputFile = path.join(__dirname, `${name}.xlsx`);
+        const file = fs.readFileSync(inputFile);
+        toPdf(file)
+        .then((pdfBuffer) => {
+            fs.writeFileSync(`./${name}.pdf`, pdfBuffer)
+        }, (err) => {
+            console.log(err)
+        })
+        .then(async () => {
+            const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
+            const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
+            pdfDoc.addPage(existingPage);
+            const pdfBytes = await pdfDoc.save();
+            fs.writeFileSync(name+".pdf", pdfBytes, () => {});
+            res.send(fs.readFileSync(name+".pdf", () => {}));
+
+        });
     });
 });
 app.post("/add-model", checkAuth, async function (req, res) {
