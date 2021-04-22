@@ -56,7 +56,6 @@ app.get('/get_model/:code', async (req, res)=>{
 });
 app.post("/", checkAuth, async function (req, res) {
     if(!req.body) return response.sendStatus(400);
-    var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
     postNote(req.body, req.userData.userId);
     res.contentType("application/pdf");
     let name = modify(req.body, req.userData.userId)
