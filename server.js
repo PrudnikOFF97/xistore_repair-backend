@@ -93,9 +93,8 @@ app.get("/print/:id", checkAuth, async (req, res) => {
             const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
             pdfDoc.addPage(existingPage);
             const pdfBytes = await pdfDoc.save();
-            // fs.writeFileSync(`./${name}.pdf`, pdfBytes);
-            // res.send(fs.readFileSync(name+".pdf", () => {}));
-            res.send(pdfBytes);
+            fs.writeFileSync(`./${name}.pdf`, pdfBytes);
+            res.send(fs.readFileSync(name+".pdf", () => {}));
         }, (err) => {
             console.log(err)
         });
