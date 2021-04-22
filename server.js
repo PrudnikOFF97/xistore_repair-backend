@@ -9,7 +9,7 @@ const repairsRouter = require("./Routes/repairs")
 const userRouter = require("./Routes/user");
 const fs = require('fs');
 const path = require('path');
-import toPdf from 'office-to-pdf';
+var toPdf = require("office-to-pdf");
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
 var multer = require('multer');
