@@ -76,14 +76,12 @@ app.post("/", checkAuth, async function (req, res) {
             const pdfBytes = await pdfDoc.save();
             fs.writeFileSync(name+".pdf", pdfBytes, () => {});
             res.send(fs.readFileSync(name+".pdf", () => {}));
-
         })
         return name;
     });
 });
 app.get("/print/:id", checkAuth, async (req, res) => {
     res.contentType("application/pdf");
-    var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
     const repair = await Repairs.findById(req.params["id"]).lean()
     modify(repair, req.userData.userId)
     .then(name => {
@@ -102,7 +100,6 @@ app.get("/print/:id", checkAuth, async (req, res) => {
             const pdfBytes = await pdfDoc.save();
             fs.writeFileSync(name+".pdf", pdfBytes, () => {});
             res.send(fs.readFileSync(name+".pdf", () => {}));
-
         });
     });
 });
