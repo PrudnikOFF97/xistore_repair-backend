@@ -1,5 +1,4 @@
 const { PDFDocument } = require('pdf-lib');
-const libre = require('libreoffice-convert');
 XLSX = require('exceljs');
 const express = require('express');
 const urlencoded = require("body-parser");
@@ -10,6 +9,7 @@ const repairsRouter = require("./Routes/repairs")
 const userRouter = require("./Routes/user");
 const fs = require('fs');
 const path = require('path');
+import toPdf from 'office-to-pdf';
 const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
 require('dotenv').config();
 var multer = require('multer');
@@ -82,15 +82,14 @@ app.post("/", checkAuth, async function (req, res) {
         // let inputFile = Buffer.from(fs.readFileSync(name+".xlsx").buffer);
         let inputFile = path.join(__dirname, `${name}.xlsx`);
         const file = fs.readFileSync(inputFile);
-        libre.convert(file, ".pdf", undefined, (err, done) => {
-            if (err) {
-              console.log(`Error converting file: ${err}`);
+        toPdf(file).then(
+            (pdfBuffer) => {
+                fs.writeFileSync(`./${name}.pdf`, pdfBuffer)
+            }, (err) => {
+              console.log(err)
             }
-            
-            // Here in done you have pdf file which you can save or transfer in another stream
-            fs.writeFileSync(path.join(__dirname, `${name}.pdf`), done);
-        })
-        .then(async () => {
+          )
+          .then(async () => {
             const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
             const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
             pdfDoc.addPage(existingPage);
