@@ -90,7 +90,7 @@ app.post("/", checkAuth, async function (req, res) {
             // Here in done you have pdf file which you can save or transfer in another stream
             fs.writeFileSync(path.join(__dirname, `${name}.pdf`), done);
         })
-        .then(() => {
+        .then(async () => {
             const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
             const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
             pdfDoc.addPage(existingPage);
