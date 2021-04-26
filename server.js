@@ -8,20 +8,17 @@ const Models = require("./Models/Models");
 const repairsRouter = require("./Routes/repairs")
 const userRouter = require("./Routes/user");
 const fs = require('fs');
-const CloudmersiveConvertApiClient = require('cloudmersive-convert-api-client');
+const path = require('path');
+const toPdf = require("office-to-pdf");
 require('dotenv').config();
-var multer = require('multer');
+const multer = require('multer');
 const checkAuth = require('./Middlewares/check-auth');
 const Users = require('./Models/Users');
-
-var defaultClient = CloudmersiveConvertApiClient.ApiClient.instance;
-var Apikey = defaultClient.authentications['Apikey'];
-Apikey.apiKey = process.env.CLOUDMERSIVE_KEY;
 
 const port = process.env.PORT || 1337;
 
 const urlencodedParser = urlencoded({extended: false});
-var upload = multer();
+const upload = multer();
 const app = express();
 app.use(express.json());
 app.use(function(req, res, next) {
@@ -59,50 +56,44 @@ app.get('/get_model/:code', async (req, res)=>{
 });
 app.post("/", checkAuth, async function (req, res) {
     if(!req.body) return response.sendStatus(400);
-    var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
     postNote(req.body, req.userData.userId);
     res.contentType("application/pdf");
     let name = modify(req.body, req.userData.userId)
     .then(name => {
-        var callback = async function(error, data, response) {
-            if (error) {
-                console.error(error);
-            } else {
-                fs.writeFileSync(name+".pdf", data, () => {});
-                const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
-                const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
-                pdfDoc.addPage(existingPage);
-                const pdfBytes = await pdfDoc.save();
-                fs.writeFileSync(name+".pdf", pdfBytes, () => {});
-                res.send(fs.readFileSync(name+".pdf", () => {}));
-            }
-        };    
-        let inputFile = Buffer.from(fs.readFileSync(name+".xlsx").buffer);
-        apiInstance.convertDocumentXlsxToPdf(inputFile, callback);
+        let inputFile = path.join(__dirname, `${name}.xlsx`);
+        const file = fs.readFileSync(inputFile);
+        toPdf(file)
+        .then(async (pdfBuffer) => {
+            const pdfDoc = await PDFDocument.load(pdfBuffer);
+            const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
+            pdfDoc.addPage(existingPage);
+            const pdfBytes = await pdfDoc.save();
+            fs.writeFileSync(`./${name}.pdf`, pdfBytes);
+            res.send(fs.readFileSync(name+".pdf", () => {}));
+        }, (err) => {
+            console.log(err)
+        });
         return name;
     });
 });
 app.get("/print/:id", checkAuth, async (req, res) => {
     res.contentType("application/pdf");
-    var apiInstance = new CloudmersiveConvertApiClient.ConvertDocumentApi();
     const repair = await Repairs.findById(req.params["id"]).lean()
     modify(repair, req.userData.userId)
     .then(name => {
-        var callback = async function(error, data, response) {
-            if (error) {
-                console.error(error);
-            } else {
-                fs.writeFileSync(name+".pdf", data, () => {});
-                const pdfDoc = await PDFDocument.load(fs.readFileSync(name+".pdf"));
-                const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
-                pdfDoc.addPage(existingPage);
-                const pdfBytes = await pdfDoc.save();
-                fs.writeFileSync(name+".pdf", pdfBytes, () => {});
-                res.send(fs.readFileSync(name+".pdf", () => {}));
-            }
-        };    
-        let inputFile = Buffer.from(fs.readFileSync(name+".xlsx").buffer);
-        apiInstance.convertDocumentXlsxToPdf(inputFile, callback);
+        let inputFile = path.join(__dirname, `${name}.xlsx`);
+        const file = fs.readFileSync(inputFile);
+        toPdf(file)
+        .then(async (pdfBuffer) => {
+            const pdfDoc = await PDFDocument.load(pdfBuffer);
+            const [existingPage] = await pdfDoc.copyPages(pdfDoc, [1]);
+            pdfDoc.addPage(existingPage);
+            const pdfBytes = await pdfDoc.save();
+            fs.writeFileSync(`./${name}.pdf`, pdfBytes);
+            res.send(fs.readFileSync(name+".pdf", () => {}));
+        }, (err) => {
+            console.log(err)
+        });
     });
 });
 app.post("/add-model", checkAuth, async function (req, res) {
