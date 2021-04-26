@@ -1,5 +1,5 @@
-const express = require('express')
-const Repairs = require('../Models/Repairs')
+const express = require('express');
+const Repairs = require('../Models/Repairs');
 const urlencoded = require("body-parser");
 const checkAuth = require("../Middlewares/check-auth");
 
@@ -42,4 +42,4 @@ router.post("/update/:id", checkAuth, async function (req, res) {
     res.sendStatus(204);
 });
 
-module.exports = router
+module.exports = router;
