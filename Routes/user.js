@@ -1,5 +1,5 @@
-const express = require('express')
-const User = require('../Models/Users')
+const express = require('express');
+const User = require('../Models/Users');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const bodyParser = require('body-parser');
@@ -8,7 +8,7 @@ require('dotenv').config();
 const jsonParser = bodyParser.json();
 const urlencodedParser = bodyParser.urlencoded({
   extended: false
-})
+});
 
 
 const router = express.Router();
@@ -45,7 +45,7 @@ router.post("/signup", (req, res, next) => {
           error: err
         });
       });;
-  })
+  });
 
 });
 
@@ -82,7 +82,7 @@ router.post("/login", (req, res, next) => {
       userId: fetchedUser._id,
       userName: fetchedUser.login
     });
-  })
+  });
 });
 router.post("/", checkAuth, (req, res) => {
   User.findById(req.userData.userId)
@@ -99,7 +99,7 @@ router.post("/", checkAuth, (req, res) => {
     .catch(err => {
       res.status(500).json({
         message: "Ошибка!"
-      })
+      });
     });
 });
 router.get("/", checkAuth, (req, res) => {
@@ -119,4 +119,4 @@ router.get("/managers", checkAuth, (req, res) => {
     });
 });
 
-module.exports = router
+module.exports = router;
