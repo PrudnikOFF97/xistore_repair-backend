@@ -70,7 +70,8 @@ router.post("/login", (req, res, next) => {
     }
     const token = jwt.sign({
         login: fetchedUser.login,
-        userId: fetchedUser._id
+        userId: fetchedUser._id,
+        isAdmin: fetchedUser.isAdmin
       },
       process.env.JWT_SECRET, {
         expiresIn: "1h"
@@ -105,10 +106,11 @@ router.post("/", checkAuth, (req, res) => {
 router.get("/", checkAuth, (req, res) => {
   User.findById(req.userData.userId)
     .then(user => {
-      res.json({
+      res.status(200).json({
         login: user.login,
         managers: user.managers,
-        addres: user.addres
+        addres: user.addres,
+        isAdmin: user.isAdmin
       });
     });
 });

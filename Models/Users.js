@@ -5,6 +5,7 @@ const usersSchema = new Schema({
     password: String,
     addres: String,
     managers: [],
+    isAdmin: Boolean,
 });
 
 
