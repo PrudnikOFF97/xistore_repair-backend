@@ -9,16 +9,16 @@ const repairsRouter = require("./Routes/repairs")
 const userRouter = require("./Routes/user");
 const fs = require('fs');
 const path = require('path');
-var toPdf = require("office-to-pdf");
+const toPdf = require("office-to-pdf");
 require('dotenv').config();
-var multer = require('multer');
+const multer = require('multer');
 const checkAuth = require('./Middlewares/check-auth');
 const Users = require('./Models/Users');
 
 const port = process.env.PORT || 1337;
 
 const urlencodedParser = urlencoded({extended: false});
-var upload = multer();
+const upload = multer();
 const app = express();
 app.use(express.json());
 app.use(function(req, res, next) {
